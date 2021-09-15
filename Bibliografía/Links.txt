@@ -6,3 +6,7 @@ https://mathworld.wolfram.com/CircularSegment.html
 https://mathworld.wolfram.com/Circle-CircleIntersection.html
 https://iopscience.iop.org/article/10.1086/345520/pdf
 https://www.ita.uni-heidelberg.de/~dullemond/lectures/studtage_compastro_2018/index.shtml
+
+https://exoplanetarchive.ipac.caltech.edu/docs/datasethelp/AXA.html
+http://brucegary.net/AXA/x.htm
+http://brucegary.net/AXA/Fitting/fitting.html
