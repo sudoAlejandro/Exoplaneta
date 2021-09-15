@@ -10,3 +10,5 @@ https://www.ita.uni-heidelberg.de/~dullemond/lectures/studtage_compastro_2018/in
 https://exoplanetarchive.ipac.caltech.edu/docs/datasethelp/AXA.html
 http://brucegary.net/AXA/x.htm
 http://brucegary.net/AXA/Fitting/fitting.html
+
+http://exoplanets.org/detail/GJ_436_b
