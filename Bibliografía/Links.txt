@@ -1,3 +1,8 @@
 https://www.paulanthonywilson.com/exoplanets/exoplanet-detection-techniques/the-exoplanet-transit-method/
 https://www.sfu.ca/colloquium/PDC_Top/astrobiology/discovering-exoplanets/calculating-exoplanet-properties.html#:~:text=To%20determine%20the%20planet%20radius,shown%20in%20the%20image%20below.
 http://ifa.hawaii.edu/~howard/ast241/exoplanet_properties.pdf
+
+https://mathworld.wolfram.com/CircularSegment.html
+https://mathworld.wolfram.com/Circle-CircleIntersection.html
+https://iopscience.iop.org/article/10.1086/345520/pdf
+https://www.ita.uni-heidelberg.de/~dullemond/lectures/studtage_compastro_2018/index.shtml
