@@ -12,3 +12,4 @@ http://brucegary.net/AXA/x.htm
 http://brucegary.net/AXA/Fitting/fitting.html
 
 http://exoplanets.org/detail/GJ_436_b
+https://astronomy.swin.edu.au/cosmos/h/hertzsprung-russell+diagram

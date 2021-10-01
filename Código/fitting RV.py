@@ -1,107 +1,33 @@
-# import necessary modules
-import numpy as np
-import matplotlib.pyplot as plt
-import phoebe
+for n, letter in enumerate("bc"):
+    plt.figure()
 
-# Subscribe to messages printed to the screen
-logger = phoebe.get_basic_logger(clevel='INFO')
+    # Get the posterior median orbital parameters
+    p = np.median(trace["P"][:, n])
+    t0 = np.median(trace["t0"][:, n])
 
-# Step 1: Create synthetic radial velocity curves and add some noise. We'll use
-# those as simulated data to fit
+    # Compute the median of posterior estimate of the background RV
+    # and the contribution from the other planet. Then we can remove
+    # this from the data to plot just the planet we care about.
+    other = np.median(trace["vrad"][:, :, (n + 1) % 2], axis=0)
+    other += np.median(trace["bkg"], axis=0)
 
-# Define a system
-mybundle = phoebe.Bundle('binary')
-mybundle['ecc'] = 0.34
-mybundle['per0'] = 53.0
-mybundle['vgamma'] = -10.0
-mybundle['sma'] = 10.0
-mybundle['incl'] = 67.0
-mybundle['q'] = 0.66
-mybundle['t0@orbit'] = 1.0
+    # Plot the folded data
+    x_fold = (x - t0 + 0.5 * p) % p - 0.5 * p
+    plt.errorbar(x_fold, y - other, yerr=yerr, fmt=".k")
 
-# Generate a time base to compute the RVs on, and set the uncertainties on the
-# radial velocity curve
-time = np.sort(np.random.uniform(low=0, high=10*mybundle['period'], size=100))
-sigma = np.ones(len(time))
+    # Compute the posterior prediction for the folded RV model for this
+    # planet
+    t_fold = (t - t0 + 0.5 * p) % p - 0.5 * p
+    inds = np.argsort(t_fold)
+    pred = np.percentile(trace["vrad_pred"][:, inds, n], [16, 50, 84], axis=0)
+    plt.plot(t_fold[inds], pred[1], color="C0", label="model")
+    art = plt.fill_between(
+        t_fold[inds], pred[0], pred[2], color="C0", alpha=0.3
+    )
+    art.set_edgecolor("none")
 
-# --- Primary component
-pos1, velo1, btime1, ptime1 = mybundle.get_orbit('primary', time=time)
-noise1 = np.random.normal(scale=sigma)
-
-# --- Secondary component
-pos2, velo2, btime2, ptime2 = mybundle.get_orbit('secondary', time=time)
-noise2 = np.random.normal(scale=sigma)
-
-# Save the RVs to a file
-np.savetxt('system.rvs', np.column_stack([time, velo1[2]+noise1, sigma,
-                                                    velo2[2]+noise2, sigma]))
-
-# Step 2: Create a new system, and load the previously generated radial velocity
-# curves
-mybundle = phoebe.Bundle('binary')
-
-# Add the RV curve as data to the primary and secondary
-mybundle.rv_fromfile('system.rvs', columns=['time', 'rv', 'sigma'],
-                     objref='primary', method='dynamical')
-mybundle.rv_fromfile('system.rvs', columns=['time', '', '', 'rv', 'sigma'],
-                     objref='secondary', method='dynamical')
-
-# We don't want to fit the semi-major axis because it correlates heavily with
-# inclination angle. A better parameter is the projected semi-major axis. This
-# is not a standard parameter so we'll have to add it. Additionally, we'll
-# remove the semi-major axis as a free parameter but let be derived from asini
-# instead
-mybundle.add_parameter('asini@orbit', replaces='sma')
-
-# Define priors
-mybundle.set_prior('ecc', distribution='uniform', lower=0, upper=1)
-mybundle.set_prior('per0', distribution='uniform', lower=0, upper=360)
-mybundle.set_prior('vgamma', distribution='uniform', lower=-30, upper=10)
-mybundle.set_prior('incl', distribution='uniform', lower=0, upper=90)
-mybundle.set_prior('q', distribution='uniform', lower=0.5, upper=1)
-mybundle.set_prior('sma', distribution='uniform', lower=6, upper=16)
-mybundle.set_prior('t0@orbit', distribution='uniform', lower=0, upper=2)
-mybundle.set_prior('asini', distribution='uniform', lower=0, upper=15)
-
-# Mark the parameters that we want to include in the fit
-mybundle.set_adjust('ecc')
-mybundle.set_adjust('per0')
-mybundle.set_adjust('vgamma')
-mybundle.set_adjust('asini')
-mybundle.set_adjust('incl')
-mybundle.set_adjust('q')
-mybundle.set_adjust('t0@orbit')
-
-# Add fitting options: we want to use the emcee package, and we'll use 500
-# iterations on 50 walkers.
-mybundle.add_fitting(context='fitting:emcee', label='mcmc', iters=500, walkers=50)
-
-# To speed up the computations, we'll use the MPI framework with 6 threads
-mpi = phoebe.ParameterSet('mpi', np=6)
-
-# Run the fitting algorithm
-mybundle.run_fitting(fittinglabel='mcmc', mpi=mpi)
-
-# Plot the history of the probabilities of chain
-plt.figure()
-mybundle['mcmc@feedback'].plot_logp()
-
-# Only select the last 200 iterations, cut off in lnprob and set the resulting
-# chain as the posteriors on the parameters
-mybundle['mcmc@feedback'].modify_chain(lnproblim=-40, burnin=300)
-mybundle.accept_feedback('mcmc')
-
-# Plot the posteriors and the correlations
-mybundle['mcmc@feedback'].plot_summary()
-
-# Print out the report of the feedback
-print(mybundle['mcmc@feedback'])
-
-# Plot the best model    
-plt.figure()
-mybundle.plot_obs('rv01', fmt='ko', phased=True)
-mybundle.plot_obs('rv02', fmt='ks', phased=True)
-mybundle.plot_syn('rv01', 'r-', lw=2, phased=True)
-mybundle.plot_syn('rv02', 'b-', lw=2, phased=True)
-
-plt.show()
+    plt.legend(fontsize=10)
+    plt.xlim(-0.5 * p, 0.5 * p)
+    plt.xlabel("phase [days]")
+    plt.ylabel("radial velocity [m/s]")
+    plt.title("K2-24{0}".format(letter))
